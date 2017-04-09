@@ -22,6 +22,11 @@
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+    <script src = "statesData.js"></script>
+    <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+    <script src = densityData.js></script>
+
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -91,43 +96,163 @@
                     <h2>Map</h2>
                     <hr class="star-primary">
                 </div>
+
             </div>
-            <head>
-			  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-			  <script>
-			    google.charts.load('current', { 'packages': ['map'] });
-			    google.charts.setOnLoadCallback(drawMap);
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      /* Optional: Makes the sample page fill the window. */
+      #map {
+        height: 600px;
+        width: 1200px;
+      }
 
-			    function drawMap() {
-			      var data = google.visualization.arrayToDataTable([
-			        ['Country', 'Population'],
-			        ['China', 'China: 1,363,800,000'],
-			        ['India', 'India: 1,242,620,000'],
-			        ['US', 'US: 317,842,000'],
-			        ['Indonesia', 'Indonesia: 247,424,598'],
-			        ['Brazil', 'Brazil: 201,032,714'],
-			        ['Pakistan', 'Pakistan: 186,134,000'],
-			        ['Nigeria', 'Nigeria: 173,615,000'],
-			        ['Bangladesh', 'Bangladesh: 152,518,015'],
-			        ['Russia', 'Russia: 146,019,512'],
-			        ['Japan', 'Japan: 127,120,000']
-			      ]);
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        
+      }
+      /*#floating-panel {
+        background-color: #fff;
+        border: 1px solid #999;
+        left: 25%;
+        padding: 5px;
+        position: absolute;
+      }
+      #floating-panel {
+        top: 10px;
+        z-index: 5;
+      }*/
+    </style>
+    <!-- <div id="floating-panel">
+      <button onclick="toggleHeatmap()">Toggle Heatmap</button>
+      <button onclick="changeGradient()">Change gradient</button>
+      <button onclick="changeRadius()">Change radius</button>
+      <button onclick="changeOpacity()">Change opacity</button>
+    </div>
+ -->
+    
 
-			    var options = {
-			      showTooltip: true,
-			      showInfoWindow: true
-			    };
+<div id = "map"></div>
+    <script>var mapboxAccessToken = 'pk.eyJ1Ijoic25laGFhIiwiYSI6ImNqMWF2MjZnYTA5ZW4yeW82NnJ1aWV5ZmMifQ.zfjRWACg8lwUJsaNvDVKVQ';
+var map = L.map('map').setView([25, 0], 2.25);
 
-			    var map = new google.visualization.Map(document.getElementById('chart_div'));
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken, {
+    id: 'mapbox.light',
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>'
+}).addTo(map);
 
-			    map.draw(data, options);
-			  };
-			  </script>
-			  </head>
-			  <body>
-			    <div id="chart_div"></div>
-			  </body>
-        </div>
+function getColor(d) {
+    return d > 90 ? '#800026' :
+           d > 75  ? '#BD0026' :
+           d > 50  ? '#E31A1C' :
+           d > 40  ? '#FC4E2A' :
+           d > 30   ? '#FD8D3C' :
+           d > 20   ? '#FEB24C' :
+           d > 10   ? '#FED976' :
+                      '#FFEDA0';
+}
+
+function style(feature) {
+    return {
+        fillColor: getColor(getDensity(feature.properties.sov_a3)),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+    };
+}
+
+function getDensity(c) {
+    for (i = 0; i < data.length; i++) {
+        if (data[i].code == c) {
+            return data[i].density;
+        }
+    }
+}
+
+L.geoJson(statesData, {style: style}).addTo(map);
+
+
+
+
+// L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+//     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+//     maxZoom: 18,
+//     id: 'mapbox.light',
+//     accessToken: 'pk.eyJ1Ijoic25laGFhIiwiYSI6ImNqMWF2MjZnYTA5ZW4yeW82NnJ1aWV5ZmMifQ.zfjRWACg8lwUJsaNvDVKVQ'
+// }).addTo(mymap);
+</script>
+
+            <!-- <div id="map"></div>
+
+    <script>
+
+      // This example requires the Visualization library. Include the libraries=visualization
+      // parameter when you first load the API. For example:
+      // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=visualization">
+
+      var map, heatmap;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 13,
+          center: {lat: 37.775, lng: -122.434},
+          mapTypeId: 'satellite'
+        });
+
+        heatmap = new google.maps.visualization.HeatmapLayer({
+          data: getPoints(),
+          map: map
+        });
+      }
+
+      function toggleHeatmap() {
+        heatmap.setMap(heatmap.getMap() ? null : map);
+      }
+
+      function changeGradient() {
+        var gradient = [
+          'rgba(0, 255, 255, 0)',
+          'rgba(0, 255, 255, 1)',
+          'rgba(0, 191, 255, 1)',
+          'rgba(0, 127, 255, 1)',
+          'rgba(0, 63, 255, 1)',
+          'rgba(0, 0, 255, 1)',
+          'rgba(0, 0, 223, 1)',
+          'rgba(0, 0, 191, 1)',
+          'rgba(0, 0, 159, 1)',
+          'rgba(0, 0, 127, 1)',
+          'rgba(63, 0, 91, 1)',
+          'rgba(127, 0, 63, 1)',
+          'rgba(191, 0, 31, 1)',
+          'rgba(255, 0, 0, 1)'
+        ]
+        heatmap.set('gradient', heatmap.get('gradient') ? null : gradient);
+      }
+
+      function changeRadius() {
+        heatmap.set('radius', heatmap.get('radius') ? null : 20);
+      }
+
+      function changeOpacity() {
+        heatmap.set('opacity', heatmap.get('opacity') ? null : 0.2);
+      }
+
+      // Heatmap data: 500 Points
+      function getPoints() {
+        return [
+         
+        ];
+      }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDb_Rh1U_-uBkflaLnWC01NcHyo0MUfNjc&libraries=visualization&callback=initMap">
+    </script>
+            
+        </div> -->
             
     </section>
 
